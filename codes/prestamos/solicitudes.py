@@ -5,7 +5,13 @@ from datetime import date, datetime
 from typing import Any
 
 from prestamos.config import (
+    DIAS_HABILES_LIMITE_VENCIMIENTO,
+    ESTADO_APROBADA,
+    ESTADO_CANCELADA,
+    ESTADO_RECHAZADA,
     ESTADO_SOLICITADA,
+    ESTADO_VENCIDA,
+    ESTADOS_CANCELABLES,
     ESTADOS_QUE_BLOQUEAN_DISPONIBILIDAD,
     REQUESTS_FILE,
     ROLE_ENCARGADO,
@@ -13,8 +19,10 @@ from prestamos.config import (
 from prestamos.equipos import buscar_equipo, listar_equipos
 from prestamos.persistencia import (
     cargar_json,
+    dias_habiles_entre,
     generar_id,
     guardar_json,
+    leer_entero,
     leer_fecha,
     leer_no_vacio,
     periodos_se_superponen,
@@ -172,3 +180,149 @@ def consultar_todas_solicitudes(usuario_actual: dict[str, Any]) -> None:
     print("\n--- TODAS LAS SOLICITUDES ---")
     for solicitud in solicitudes:
         imprimir_solicitud(solicitud)
+
+
+def _buscar_solicitud(solicitudes: list[dict[str, Any]], solicitud_id: int) -> dict[str, Any] | None:
+    return next((s for s in solicitudes if s["id"] == solicitud_id), None)
+
+
+def actualizar_estados_automaticos() -> None:
+    """RN-07: una solicitud Solicitada por más de 5 días hábiles pasa a Vencida."""
+    solicitudes = cargar_json(REQUESTS_FILE)
+    hoy = date.today()
+    hubo_cambios = False
+
+    for solicitud in solicitudes:
+        if solicitud["estado"] == ESTADO_SOLICITADA:
+            fecha_creacion = datetime.fromisoformat(solicitud["creada_en"]).date()
+
+            if dias_habiles_entre(fecha_creacion, hoy) > DIAS_HABILES_LIMITE_VENCIMIENTO:
+                solicitud["estado"] = ESTADO_VENCIDA
+                hubo_cambios = True
+                logging.info("Solicitud vencida automáticamente | id=%s", solicitud["id"])
+
+    if hubo_cambios:
+        guardar_json(REQUESTS_FILE, solicitudes)
+
+
+def aprobar_solicitud(usuario_actual: dict[str, Any]) -> None:
+    """RN-05: solo un Encargado aprueba. RN-09: no puede aprobar su propia solicitud."""
+    if usuario_actual["rol"] != ROLE_ENCARGADO:
+        print("Acceso denegado: solo un Encargado puede aprobar solicitudes.")
+        return
+
+    actualizar_estados_automaticos()
+
+    solicitud_id = leer_entero("ID de solicitud: ")
+    if solicitud_id is None:
+        return
+
+    solicitudes = cargar_json(REQUESTS_FILE)
+    solicitud = _buscar_solicitud(solicitudes, solicitud_id)
+
+    if solicitud is None:
+        print("Solicitud no encontrada.")
+        return
+
+    if solicitud["estado"] != ESTADO_SOLICITADA:
+        print("Solo se pueden aprobar solicitudes en estado Solicitada.")
+        return
+
+    if solicitud["solicitante"] == usuario_actual["correo"]:
+        print("Un Encargado no puede aprobar su propia solicitud.")
+        return
+
+    fecha_inicio = date.fromisoformat(solicitud["fecha_inicio"])
+    fecha_fin = date.fromisoformat(solicitud["fecha_fin"])
+
+    no_disponibles = [
+        equipo_id
+        for equipo_id in solicitud["equipos"]
+        if not equipo_disponible(equipo_id, fecha_inicio, fecha_fin, ignorar_solicitud_id=solicitud["id"])
+    ]
+
+    if no_disponibles:
+        print("La solicitud no puede aprobarse. Equipos no disponibles: " + ", ".join(no_disponibles))
+        return
+
+    solicitud["estado"] = ESTADO_APROBADA
+    solicitud["aprobada_por"] = usuario_actual["correo"]
+
+    if guardar_json(REQUESTS_FILE, solicitudes):
+        logging.info("Solicitud aprobada | id=%s | por=%s", solicitud_id, usuario_actual["correo"])
+        print("Solicitud aprobada correctamente.")
+
+
+def rechazar_solicitud(usuario_actual: dict[str, Any]) -> None:
+    """RN-05/RN-09: solo un Encargado rechaza y no su propia solicitud.
+    RN-06: todo rechazo requiere justificación."""
+    if usuario_actual["rol"] != ROLE_ENCARGADO:
+        print("Acceso denegado: solo un Encargado puede rechazar solicitudes.")
+        return
+
+    actualizar_estados_automaticos()
+
+    solicitud_id = leer_entero("ID de solicitud: ")
+    if solicitud_id is None:
+        return
+
+    solicitudes = cargar_json(REQUESTS_FILE)
+    solicitud = _buscar_solicitud(solicitudes, solicitud_id)
+
+    if solicitud is None:
+        print("Solicitud no encontrada.")
+        return
+
+    if solicitud["estado"] != ESTADO_SOLICITADA:
+        print("Solo se pueden rechazar solicitudes en estado Solicitada.")
+        return
+
+    if solicitud["solicitante"] == usuario_actual["correo"]:
+        print("Un Encargado no puede rechazar su propia solicitud.")
+        return
+
+    motivo = leer_no_vacio("Motivo del rechazo: ")
+
+    solicitud["estado"] = ESTADO_RECHAZADA
+    solicitud["rechazada_por"] = usuario_actual["correo"]
+    solicitud["motivo_rechazo"] = motivo
+
+    if guardar_json(REQUESTS_FILE, solicitudes):
+        logging.info(
+            "Solicitud rechazada | id=%s | por=%s | motivo=%s",
+            solicitud_id,
+            usuario_actual["correo"],
+            motivo,
+        )
+        print("Solicitud rechazada correctamente.")
+
+
+def cancelar_solicitud(usuario_actual: dict[str, Any]) -> None:
+    """RN-07: solo el propio solicitante cancela, y solo desde Solicitada o Aprobada."""
+    actualizar_estados_automaticos()
+
+    solicitud_id = leer_entero("ID de solicitud: ")
+    if solicitud_id is None:
+        return
+
+    solicitudes = cargar_json(REQUESTS_FILE)
+    solicitud = _buscar_solicitud(solicitudes, solicitud_id)
+
+    if solicitud is None:
+        print("Solicitud no encontrada.")
+        return
+
+    if solicitud["solicitante"] != usuario_actual["correo"]:
+        print("No puede cancelar solicitudes de otro usuario.")
+        return
+
+    if solicitud["estado"] not in ESTADOS_CANCELABLES:
+        print("La solicitud solo puede cancelarse si se encuentra en estado Solicitada o Aprobada.")
+        return
+
+    solicitud["estado"] = ESTADO_CANCELADA
+    solicitud["cancelada_en"] = datetime.now().isoformat(timespec="seconds")
+
+    if guardar_json(REQUESTS_FILE, solicitudes):
+        logging.info("Solicitud cancelada | id=%s | por=%s", solicitud_id, usuario_actual["correo"])
+        print("Solicitud cancelada correctamente.")

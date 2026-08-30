@@ -9,9 +9,16 @@ from prestamos.usuarios import iniciar_sesion
 
 def menu_solicitante(usuario: dict[str, Any]) -> None:
     from prestamos.equipos import listar_equipos
-    from prestamos.solicitudes import consultar_mis_solicitudes, crear_solicitud
+    from prestamos.solicitudes import (
+        actualizar_estados_automaticos,
+        cancelar_solicitud,
+        consultar_mis_solicitudes,
+        crear_solicitud,
+    )
 
     while True:
+        actualizar_estados_automaticos()
+
         print(
             """
 ========== MENÚ SOLICITANTE ==========
@@ -19,6 +26,7 @@ def menu_solicitante(usuario: dict[str, Any]) -> None:
 1. Consultar equipos
 2. Crear solicitud
 3. Consultar mis solicitudes
+4. Cancelar solicitud
 
 0. Cerrar sesión
 """
@@ -31,6 +39,8 @@ def menu_solicitante(usuario: dict[str, Any]) -> None:
             crear_solicitud(usuario)
         elif opcion == "3":
             consultar_mis_solicitudes(usuario)
+        elif opcion == "4":
+            cancelar_solicitud(usuario)
         elif opcion == "0":
             logging.info("Sesión cerrada | correo=%s", usuario["correo"])
             return
@@ -45,9 +55,13 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
         registrar_equipo,
     )
     from prestamos.solicitudes import (
+        actualizar_estados_automaticos,
+        aprobar_solicitud,
+        cancelar_solicitud,
         consultar_mis_solicitudes,
         consultar_todas_solicitudes,
         crear_solicitud,
+        rechazar_solicitud,
     )
     from prestamos.usuarios import (
         activar_desactivar_usuario,
@@ -56,6 +70,8 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
     )
 
     while True:
+        actualizar_estados_automaticos()
+
         print(
             """
 =========== MENÚ ENCARGADO ===========
@@ -71,6 +87,10 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
 7. Crear solicitud personal
 8. Consultar mis solicitudes
 9. Consultar todas las solicitudes
+
+10. Aprobar solicitud
+11. Rechazar solicitud
+12. Cancelar mi solicitud
 
 0. Cerrar sesión
 """
@@ -95,6 +115,12 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
             consultar_mis_solicitudes(usuario)
         elif opcion == "9":
             consultar_todas_solicitudes(usuario)
+        elif opcion == "10":
+            aprobar_solicitud(usuario)
+        elif opcion == "11":
+            rechazar_solicitud(usuario)
+        elif opcion == "12":
+            cancelar_solicitud(usuario)
         elif opcion == "0":
             logging.info("Sesión cerrada | correo=%s", usuario["correo"])
             return
