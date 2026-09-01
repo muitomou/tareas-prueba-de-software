@@ -7,7 +7,9 @@ from typing import Any
 from prestamos.config import (
     DIAS_HABILES_LIMITE_VENCIMIENTO,
     ESTADO_APROBADA,
+    ESTADO_ATRASADA,
     ESTADO_CANCELADA,
+    ESTADO_ENTREGADA,
     ESTADO_RECHAZADA,
     ESTADO_SOLICITADA,
     ESTADO_VENCIDA,
@@ -187,7 +189,8 @@ def _buscar_solicitud(solicitudes: list[dict[str, Any]], solicitud_id: int) -> d
 
 
 def actualizar_estados_automaticos() -> None:
-    """RN-07: una solicitud Solicitada por más de 5 días hábiles pasa a Vencida."""
+    """RN-07: una solicitud Solicitada por más de 5 días hábiles pasa a Vencida.
+    RN-08: una solicitud Entregada cuya fecha de devolución ya venció pasa a Atrasada."""
     solicitudes = cargar_json(REQUESTS_FILE)
     hoy = date.today()
     hubo_cambios = False
@@ -201,8 +204,28 @@ def actualizar_estados_automaticos() -> None:
                 hubo_cambios = True
                 logging.info("Solicitud vencida automáticamente | id=%s", solicitud["id"])
 
+        elif solicitud["estado"] == ESTADO_ENTREGADA:
+            fecha_fin = date.fromisoformat(solicitud["fecha_fin"])
+
+            if hoy > fecha_fin:
+                solicitud["estado"] = ESTADO_ATRASADA
+                hubo_cambios = True
+                logging.warning("Solicitud atrasada automáticamente | id=%s", solicitud["id"])
+
     if hubo_cambios:
         guardar_json(REQUESTS_FILE, solicitudes)
+
+
+def usuario_tiene_prestamo_atrasado(correo: str) -> bool:
+    """RN-10: bloquea nuevas aprobaciones mientras existan préstamos Atrasados."""
+    actualizar_estados_automaticos()
+
+    solicitudes = cargar_json(REQUESTS_FILE)
+
+    return any(
+        s["solicitante"] == correo and s["estado"] == ESTADO_ATRASADA
+        for s in solicitudes
+    )
 
 
 def aprobar_solicitud(usuario_actual: dict[str, Any]) -> None:
@@ -230,6 +253,16 @@ def aprobar_solicitud(usuario_actual: dict[str, Any]) -> None:
 
     if solicitud["solicitante"] == usuario_actual["correo"]:
         print("Un Encargado no puede aprobar su propia solicitud.")
+        return
+
+    if usuario_tiene_prestamo_atrasado(solicitud["solicitante"]):
+        logging.warning(
+            "Aprobación bloqueada por préstamo atrasado | solicitud=%s | solicitante=%s | encargado=%s",
+            solicitud_id,
+            solicitud["solicitante"],
+            usuario_actual["correo"],
+        )
+        print("La solicitud no puede aprobarse: el usuario mantiene un préstamo atrasado.")
         return
 
     fecha_inicio = date.fromisoformat(solicitud["fecha_inicio"])

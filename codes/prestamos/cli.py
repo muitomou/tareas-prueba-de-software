@@ -4,11 +4,14 @@ import logging
 from typing import Any
 
 from prestamos.config import ROLE_ENCARGADO, configurar_directorios
+from prestamos.operaciones import crear_datos_demo
+from prestamos.solicitudes import actualizar_estados_automaticos
 from prestamos.usuarios import iniciar_sesion
 
 
 def menu_solicitante(usuario: dict[str, Any]) -> None:
     from prestamos.equipos import listar_equipos
+    from prestamos.operaciones import consultar_prestamos_clasificados
     from prestamos.solicitudes import (
         actualizar_estados_automaticos,
         cancelar_solicitud,
@@ -27,6 +30,7 @@ def menu_solicitante(usuario: dict[str, Any]) -> None:
 2. Crear solicitud
 3. Consultar mis solicitudes
 4. Cancelar solicitud
+5. Consultar préstamos vigentes, futuros y atrasados
 
 0. Cerrar sesión
 """
@@ -41,6 +45,8 @@ def menu_solicitante(usuario: dict[str, Any]) -> None:
             consultar_mis_solicitudes(usuario)
         elif opcion == "4":
             cancelar_solicitud(usuario)
+        elif opcion == "5":
+            consultar_prestamos_clasificados(usuario)
         elif opcion == "0":
             logging.info("Sesión cerrada | correo=%s", usuario["correo"])
             return
@@ -53,6 +59,11 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
         activar_desactivar_equipo,
         listar_equipos,
         registrar_equipo,
+    )
+    from prestamos.operaciones import (
+        consultar_prestamos_clasificados,
+        registrar_devolucion,
+        registrar_entrega,
     )
     from prestamos.solicitudes import (
         actualizar_estados_automaticos,
@@ -92,6 +103,11 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
 11. Rechazar solicitud
 12. Cancelar mi solicitud
 
+13. Registrar entrega
+14. Registrar devolución
+
+15. Consultar préstamos vigentes, futuros y atrasados
+
 0. Cerrar sesión
 """
         )
@@ -121,6 +137,12 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
             rechazar_solicitud(usuario)
         elif opcion == "12":
             cancelar_solicitud(usuario)
+        elif opcion == "13":
+            registrar_entrega(usuario)
+        elif opcion == "14":
+            registrar_devolucion(usuario)
+        elif opcion == "15":
+            consultar_prestamos_clasificados(usuario)
         elif opcion == "0":
             logging.info("Sesión cerrada | correo=%s", usuario["correo"])
             return
@@ -131,6 +153,9 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
 def main() -> None:
     configurar_directorios()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+
+    crear_datos_demo()
+    actualizar_estados_automaticos()
 
     print("=====================================")
     print(" SISTEMA DE PRÉSTAMO DE EQUIPOS")
