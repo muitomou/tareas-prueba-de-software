@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import logging
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+
+from prestamos.config import registrar_excepcion
 
 
 def cargar_json(archivo: Path) -> list[dict[str, Any]]:
@@ -19,7 +20,7 @@ def cargar_json(archivo: Path) -> list[dict[str, Any]]:
         return datos
 
     except (OSError, json.JSONDecodeError, ValueError) as exc:
-        logging.exception("Error al leer %s | %s", archivo.name, exc)
+        registrar_excepcion(exc, f"Error al leer {archivo.name}")
         return []
 
 
@@ -31,7 +32,7 @@ def guardar_json(archivo: Path, datos: list[dict[str, Any]]) -> bool:
         return True
 
     except OSError as exc:
-        logging.exception("Error al guardar %s | %s", archivo.name, exc)
+        registrar_excepcion(exc, f"Error al guardar {archivo.name}")
         print("No fue posible guardar la información.")
         return False
 

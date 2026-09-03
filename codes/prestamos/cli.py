@@ -3,7 +3,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from prestamos.config import ROLE_ENCARGADO, configurar_directorios
+from prestamos.config import (
+    ROLE_ENCARGADO,
+    configurar_directorios,
+    configurar_logging,
+    configurar_sentry,
+    registrar_excepcion,
+)
 from prestamos.operaciones import crear_datos_demo
 from prestamos.solicitudes import actualizar_estados_automaticos
 from prestamos.usuarios import iniciar_sesion
@@ -152,10 +158,13 @@ def menu_encargado(usuario: dict[str, Any]) -> None:
 
 def main() -> None:
     configurar_directorios()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+    configurar_logging()
+    configurar_sentry()
 
     crear_datos_demo()
     actualizar_estados_automaticos()
+
+    logging.info("Aplicación iniciada.")
 
     print("=====================================")
     print(" SISTEMA DE PRÉSTAMO DE EQUIPOS")
@@ -182,6 +191,7 @@ def main() -> None:
                 menu_solicitante(usuario)
 
         elif opcion == "0":
+            logging.info("Aplicación finalizada.")
             print("Programa finalizado.")
             break
 
@@ -189,5 +199,21 @@ def main() -> None:
             print("Opción inválida.")
 
 
+def ejecutar() -> None:
+    try:
+        main()
+
+    except KeyboardInterrupt:
+        logging.warning("Aplicación interrumpida por el usuario.")
+        print("\nAplicación finalizada.")
+
+    except Exception as exc:
+        registrar_excepcion(exc, "Error no controlado en la aplicación")
+        print(
+            "Ocurrió un error inesperado. "
+            "El incidente fue registrado en el log y enviado a Sentry."
+        )
+
+
 if __name__ == "__main__":
-    main()
+    ejecutar()

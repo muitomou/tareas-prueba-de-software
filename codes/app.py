@@ -1,4 +1,4 @@
-from prestamos.cli import main
+from prestamos.cli import ejecutar
 
 if __name__ == "__main__":
-    main()
+    ejecutar()
