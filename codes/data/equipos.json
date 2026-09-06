@@ -1,0 +1,20 @@
+[
+  {
+    "id": "EQ-001",
+    "nombre": "Notebook Lenovo",
+    "descripcion": "Notebook de laboratorio",
+    "activo": true
+  },
+  {
+    "id": "EQ-002",
+    "nombre": "Proyector Epson",
+    "descripcion": "Proyector portátil",
+    "activo": true
+  },
+  {
+    "id": "EQ-003",
+    "nombre": "Cámara Logitech",
+    "descripcion": "Cámara USB",
+    "activo": true
+  }
+]
