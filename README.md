@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Sistema de Préstamo de Equipos
 
 Aplicación de línea de comandos desarrollada en Python para administrar
@@ -112,3 +113,6 @@ codes/logs/app.log
 ## Licencia
 
 MIT. Ver [LICENSE](LICENSE).
+=======
+# tareas-prueba-de-software
+>>>>>>> origin/develop
