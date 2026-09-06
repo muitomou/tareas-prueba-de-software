@@ -3,7 +3,7 @@
 Aplicación de línea de comandos desarrollada en Python para administrar
 préstamos de equipos tecnológicos de un laboratorio universitario.
 
-> Tarea 1 - Verificación y Validación (INF331).
+> Tarea 1 
 
 ## Tecnologías
 

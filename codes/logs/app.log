@@ -1,0 +1,17 @@
+2026-09-06 20:32:31,554 | WARNING | Sentry no fue inicializado porque SENTRY_DSN no está configurado.
+2026-09-06 20:32:31,555 | INFO | Aplicación iniciada.
+2026-09-06 20:32:41,891 | WARNING | Aplicación interrumpida por el usuario.
+2026-09-06 20:36:10,001 | WARNING | Sentry no fue inicializado porque SENTRY_DSN no está configurado.
+2026-09-06 20:36:10,003 | INFO | Aplicación iniciada.
+2026-09-06 20:36:29,107 | INFO | Inicio de sesión exitoso | correo=encargado1@demo.cl
+2026-09-06 20:37:40,209 | INFO | Usuario registrado | correo=d@usm.cl | rol=Solicitante | registrado_por=encargado1@demo.cl
+2026-09-06 20:38:39,609 | INFO | Sesión cerrada | correo=encargado1@demo.cl
+2026-09-06 20:39:01,051 | INFO | Inicio de sesión exitoso | correo=solicitante@demo.cl
+2026-09-06 20:40:01,802 | INFO | Solicitud creada | id=1 | solicitante=solicitante@demo.cl | equipos=['EQ-001'] | periodo=2026-09-06/2026-09-09
+2026-09-06 20:40:23,376 | INFO | Sesión cerrada | correo=solicitante@demo.cl
+2026-09-06 20:40:40,226 | INFO | Inicio de sesión exitoso | correo=encargado1@demo.cl
+2026-09-06 20:40:52,857 | INFO | Solicitud aprobada | id=1 | por=encargado1@demo.cl
+2026-09-06 20:41:57,889 | INFO | Sesión cerrada | correo=encargado1@demo.cl
+2026-09-06 20:42:11,446 | INFO | Inicio de sesión exitoso | correo=solicitante@demo.cl
+2026-09-06 20:42:36,336 | INFO | Sesión cerrada | correo=solicitante@demo.cl
+2026-09-06 20:42:36,936 | INFO | Aplicación finalizada.
