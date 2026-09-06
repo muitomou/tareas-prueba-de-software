@@ -1,5 +1,5 @@
 # tareas-prueba-de-software
-# tareas-prueba-de-software
+
 
 # Tarea 1 - Sistema de Préstamo de Equipos
 
