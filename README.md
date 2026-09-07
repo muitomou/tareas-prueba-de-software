@@ -5,6 +5,11 @@ préstamos de equipos tecnológicos de un laboratorio universitario.
 
 > Tarea 1 
 
+## Autores
+
+- Diego Espinoza 202273576-7
+- Mauro Castillo 202273627-5
+
 ## Tecnologías
 
 - Python 3.10 o superior
@@ -103,11 +108,6 @@ codes/data/solicitudes.json
 ```text
 codes/logs/app.log
 ```
-
-## Autores
-
-- Diego Espinoza
-- Mauro Castillo
 
 ## Licencia
 
