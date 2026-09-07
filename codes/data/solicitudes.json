@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "solicitante": "solicitante@demo.cl",
+    "equipos": [
+      "EQ-001"
+    ],
+    "fecha_inicio": "2026-09-06",
+    "fecha_fin": "2026-09-09",
+    "estado": "Aprobada",
+    "creada_en": "2026-09-06T20:40:01",
+    "aprobada_por": "encargado1@demo.cl",
+    "rechazada_por": null,
+    "motivo_rechazo": null,
+    "entregada_en": null,
+    "devuelta_en": null,
+    "cancelada_en": null
+  }
+]
